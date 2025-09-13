@@ -5,8 +5,10 @@ export default function PhotoCapture({ onPhoto }) {
   const canvasRef = useRef();
   const [stream, setStream] = useState(null);
   const [err, setErr] = useState(null);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
+    
     async function start() {
       try {
         const s = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -18,14 +20,17 @@ export default function PhotoCapture({ onPhoto }) {
     }
     start();
     return () => {
+      
       if (stream) stream.getTracks().forEach(t => t.stop());
     };
-  }, [stream]);
+    
+  }, []);
 
   function take() {
     const v = videoRef.current;
     const c = canvasRef.current;
-    if (!v || !c) return;
+    
+    if (!v || !c || v.videoWidth === 0 || v.videoHeight === 0) return;
     c.width = v.videoWidth;
     c.height = v.videoHeight;
     const ctx = c.getContext('2d');
@@ -68,21 +73,23 @@ export default function PhotoCapture({ onPhoto }) {
             background: '#222',
             boxShadow: "0 2px 16px #22404418"
           }}
+          onLoadedMetadata={() => setVideoReady(true)}
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <canvas ref={canvasRef} style={{ display: 'none' }} />
           <button
             type="button"
             onClick={take}
+            disabled={!videoReady}
             style={{
               padding: "10px 28px",
               borderRadius: 7,
               border: "none",
-              background: "#1976d2",
+              background: videoReady ? "#1976d2" : "#b3c6dd",
               color: "#fff",
               fontWeight: 600,
               fontSize: 16,
-              cursor: "pointer",
+              cursor: videoReady ? "pointer" : "not-allowed",
               transition: "background 0.12s"
             }}
           >
